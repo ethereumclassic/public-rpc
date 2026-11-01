@@ -1,0 +1,80 @@
+# The private/public gate for a public repository. Verify by effect, never by reading this
+# file: AGENTS.md, "Security", carries the probe and what each of its flags is for.
+#
+# Patterns are unanchored on purpose: one too broad costs a false exclusion, one too narrow
+# leaks a credential. After any change here this must print nothing, because no tracked file
+# may match an ignore pattern:
+#   git ls-files | git -c core.excludesFile=/dev/null check-ignore --no-index --stdin
+#
+# This file cannot see a key inside a URL. AGENTS.md, "Endpoint URLs", is the gate for that.
+#
+# No build or dependency output is listed, because this repository has no stack. Add the
+# ecosystem's own output directories in the change that adds a stack.
+
+# Secrets & credentials
+.env
+.env.*
+# Negation is the example CLASS, not one filename: `.env.local.example` is a template
+# and must reach a clone. End-anchored, so `.env.example.local` stays ignored. Do not narrow.
+!.env*.example
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa
+id_ecdsa
+id_ed25519
+credentials.json
+service-account.json
+secrets/
+
+# Package-registry auth — these carry registry tokens (`_authToken`,
+# `npmAuthIdent`). An .npmrc can also weaken install-time supply-chain settings,
+# and ignoring it hides that line from review — so a repo may deliberately track
+# a credential-free, policy-only .npmrc instead. Decide; do not inherit.
+# Release-age settings do not belong in this file either way: they go in
+# pnpm-workspace.yaml, which is committed and is not ignored here.
+.npmrc
+.yarnrc
+.yarnrc.yml
+
+# Claude Code — this directory is TRACKED so repo-local agents, skills and rules
+# travel with the repo. Only machine-local and agent-written state is held back.
+# Do not invert this into a blanket ignore: an agent inside an ignored directory
+# never reaches a clone.
+.claude/settings.local.json
+.claude/worktrees/
+.claude/agent-memory-local/
+.claude/launch.json
+.claude/scheduled_tasks.json
+CLAUDE.local.md
+.claude/**/*.local.*
+.claude/**/*-local/
+
+# Internal development directory — sits at repo root alongside .github/ and .claude/
+# Contains session notes, design briefs, dev logs, planning docs. Never commit.
+.local/
+
+# Ad-hoc planning docs at root (use .local/ instead going forward)
+SESSION_NOTES.md
+PLANNING.md
+SCRATCH.md
+*.scratch.*
+*.draft.*
+
+# Blockchain & crypto
+keystore/
+*.keystore
+wallet.json
+mnemonic.txt
+# A node's private identity key. The client writes it as <datadir>/geth/nodekey, a name
+# *.key does not match.
+nodekey
+
+# IDE & OS
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
